@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<extension key="ca.nodisys.netbanx" type="payment">
+<extension key="ca.nodisys.netbanx" type="module">
   <file>netbanx</file>
   <name>Netbanx</name>
   <description>Netbanx payment gateway for CiviCRM (hosted page, autonomous, without redirection).</description>
@@ -26,20 +26,4 @@
     <url desc="Support">http://forum.civicrm.org/index.php/board,57.0.html</url>
     <url desc="Licensing">http://civicrm.org/licensing</url>
   </urls>
-  <typeInfo>
-    <userNameLabel>Store ID</userNameLabel>
-    <passwordLabel>Password</passwordLabel>
-    <subjectLabel>Account Number</subjectLabel>
-    <urlSiteDefault>https://webservices.optimalpayments.com/</urlSiteDefault>
-    <urlApiDefault></urlApiDefault>
-    <urlRecurDefault>https://webservices.optimalpayments.com/</urlRecurDefault>
-    <urlSiteTestDefault>https://webservices.test.optimalpayments.com/</urlSiteTestDefault>
-    <urlApiTestDefault></urlApiTestDefault>
-    <urlRecurTestDefault>https://webservices.test.optimalpayments.com/</urlRecurTestDefault>
-    <urlButtonDefault></urlButtonDefault>
-    <urlButtonTestDefault></urlButtonTestDefault>
-    <billingMode>form</billingMode>
-    <isRecur>1</isRecur>
-    <paymentType>1</paymentType>
-  </typeInfo>
 </extension>
