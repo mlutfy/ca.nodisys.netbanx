@@ -1,0 +1,107 @@
+
+View the README.txt for general information about this module before installing.
+
+REQUIREMENTS:
+------------
+
+* The "curl" PHP library. Under Debian, apt-get install php5-curl.
+  This library is necessary for when communicating credit card information
+  with the payment gateway.
+
+* The 'extensions' subdirectory must be writable by the web server (this is a civicrm requirement).
+
+INSTALLATION:
+------------
+
+* Enable this module in Drupal, then enable the extention in CiviCRM.
+
+* In CiviCRM > Admin > CiviMail > Message templates (/civicrm/admin/messageTemplates?reset=1),
+  go to the "System messages" subtab. Edit the "Contributions - Receipt (on-line)" template
+  and add the token "Desjardins CC receipt", i.e. {contribution.desjardins_receipt} in the 
+  "credit card information" section of the template (both HTML and text formats).
+
+* Override the templates/CRM/Contribute/Form/Contribution/ThankYou.tpl template and add
+  the following: {$trxn_id|civicrmdesjardins_receipt} in order to show the credit card
+  transaction receipt. (TODO: submit a patch to CiviCRM so that we can have this in core?)
+
+  For example:
+
+    <div class="crm-section no-label credit_card_details-section">
+{*
+      <div class="content">{$credit_card_type}</div>
+      <div class="content">{$credit_card_number}</div>
+      <div class="content">{ts}Expires{/ts}: {$credit_card_exp_date|truncate:7:''|crmDate}</div>
+*}
+      <div class="content">
+        <pre>{$trxn_id|civicrmdesjardins_receipt}
+      </div>
+      {if $membership_amount and $is_separate_payment}
+        <div class="content">
+          <pre>{$membership_trx_id|civicrmdesjardins_receipt}
+        </div>
+     {/if}
+      <div class="clear"></div>
+    </div>
+
+* In the receipt template, add a section with the "Terms and conditions", including
+  your privacy policy, shipping fees (even if there are none) and refund policy.
+
+* In CiviCRM > Admin > Configure > Domain information (civicrm/admin/domain?action=update&reset=1),
+  make sure you have set correct values for the organisation name, e-mail and postal address.
+
+* Create a custom field for contribution with a checkbox field "Terms and conditions" (ToS). 
+  Include it in a footer profile for the contribution page, and make it mandatory. The help 
+  text for the field should link (and open in a new window) to your site's terms and conditions
+  (site privacy policy, terms of use, refund/cancellation policy, shipping policy).
+
+  ToS must be visible on the contribution/event page, confirmation page and thank you page,
+  as well as on the receipt. You may need to modify the message templates to integrate them.
+
+* Either set your currency to "$ CAD" (but that is rather ugly), or add the following text
+  at the end of the financial information of the Contribution/{Main,Confirm,ThankYou}.tpl:
+  English: "All amounts are in canadian dollars ($ CAD)".
+  French: "Tous les montants sont en dollars canadiens ($ CAD)".
+
+* CRM-9491 : credit card information was not deleted from the session upon successful transaction.
+  Re-apply the patch to ThankYou.php as described in the issue, until it is resolved.
+
+Drupal variables:
+
+* Set the civicrmdesjardins_tos_url and civicrmdesjardins_tos_text variables, with respectively
+  the URL to your ToS and the description of your refund policy. This is not mandatory, but
+  otherwise you will have to add it manually to your receipt footer.
+  There is no UI for this yet, use drush vset.
+
+* Desjardins requires that the name on the receipts be the formal organisation name (matching
+  the name on their records). By default the domain name will be displayed (from the "domain
+  information"). You can override it by setting the civicrmdesjardins_orgname Drupal variable.
+
+* If you have a multi-lingual site, enable the 'variable' Drupal module, set the variables
+  as multi-lingual (admin/config/regional/i18n/variable) then go to config > system > variables
+  (admin/config/system/variable) to translate the variables.
+
+During the validation process by Desjardins:
+
+* Since the test environment of the payment gateway does not provide explicit numbers to
+  trigger invalid transactions, you must disable the credit card number checks done by
+  CiviCRM *only during the validation by Desjardins*.
+
+  In Contribute/Form/Contribution/Main.php, function formRule(), comment out the following
+  block of code:
+
+/* 
+    if ( CRM_Utils_Array::value( 'credit_card_number', $fields ) &&
+         ! CRM_Utils_Rule::creditCardNumber( $fields['credit_card_number'], $fields['credit_card_type'] ) ) {
+        $errors['credit_card_number'] = ts( 'Please enter a valid Credit Card Number' );
+    }
+*/
+
+  Once the site has been validated, you can re-enable (uncomment) the code.
+
+
+CAVEATS:
+-------
+
+* This module overrides your extension directory. (maybe we ought to find a better solution?)
+
+
