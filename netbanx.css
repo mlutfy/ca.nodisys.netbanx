@@ -1,0 +1,11 @@
+/* Show the payment processor logo on the right side of the screen */
+#billing-payment-block {
+  position: relative;
+}
+
+#billing-payment-block .crm-netbanx-billing-logo {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+

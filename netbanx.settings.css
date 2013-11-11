@@ -1,0 +1,14 @@
+#crm-netbanx-settings-logo-display {
+  padding-top: 0.5em;
+  display: none;
+}
+
+select#netbanx_logo,
+select#netbanx_logo option {
+  height: 100px;
+}
+
+select#netbanx_logo option {
+  border-bottom: 1px solid #444;
+}
+

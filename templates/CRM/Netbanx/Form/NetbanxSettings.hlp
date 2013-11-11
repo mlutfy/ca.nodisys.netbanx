@@ -1,0 +1,7 @@
+{htxt id="netbanx-logo-help-title"}
+  {ts}Logo to display{/ts}{ts}Save{/ts}
+{/htxt}
+
+{htxt id="netbanx-logo-help"}
+  Logo displayed on the payment billing block. Select the logo that correctly reflects your merchant options. If in doubt, select the standard logo.
+{/htxt}
