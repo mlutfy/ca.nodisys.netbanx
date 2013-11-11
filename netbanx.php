@@ -121,3 +121,39 @@ function netbanx_civicrm_receipt($trx_id) {
   return  db_query('SELECT receipt FROM {civicrmdesjardins_receipt} WHERE trx_id = :trx_id', array(':trx_id' => $trx_id))->fetchField();
 }
 
+/**
+ * Implementation of hook_civicrm_navigationMenu().
+ */
+function netbanx_civicrm_navigationMenu(&$params) {
+  // Get the ID of the 'Administer/System Settings' menu
+  $adminMenuId = CRM_Core_DAO::getFieldValue('CRM_Core_BAO_Navigation', 'Administer', 'id', 'name');
+  $settingsMenuId = CRM_Core_DAO::getFieldValue('CRM_Core_BAO_Navigation', 'System Settings', 'id', 'name');
+
+  // Skip adding menu if there is no administer menu
+  if (! $adminMenuId) {
+    CRM_Core_Error::debug_log_message('The Netbanx Extension could not find the Administer menu item. Menu item to configure this extension will not be added.');
+    return;
+  }
+
+  if (! $settingsMenuId) {
+    CRM_Core_Error::debug_log_message('The Netbanx Extension could not find the System Settings menu item. Menu item to configure this extension will not be added.');
+    return;
+  }
+
+  // get the maximum key under administer menu
+  $maxSettingsMenuKey = max(array_keys($params[$adminMenuId]['child'][$settingsMenuId]['child']));
+  $nextSettingsMenuKey = $maxSettingsMenuKey + 1;
+
+  $params[$adminMenuId]['child'][$settingsMenuId]['child'][$nextSettingsMenuKey] =  array(
+    'attributes' => array(
+      'name'       => 'Netbanx Settings',
+      'label'      => 'Netbanx Settings',
+      'url'        => 'civicrm/admin/setting/netbanx&reset=1',
+      'permission' => 'administer CiviCRM',
+      'parentID'   => $settingsMenuId,
+      'navID'      => $nextSettingsMenuKey,
+      'active'      => 1,
+    ),
+  );
+}
+
