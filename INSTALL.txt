@@ -8,40 +8,15 @@ REQUIREMENTS:
   This library is necessary for when communicating credit card information
   with the payment gateway.
 
-* The 'extensions' subdirectory must be writable by the web server (this is a civicrm requirement).
-
 INSTALLATION:
 ------------
 
-* Enable this module in Drupal, then enable the extention in CiviCRM.
+* Enable this extension in CiviCRM (Admin > System Settings > Extensions).
 
 * In CiviCRM > Admin > CiviMail > Message templates (/civicrm/admin/messageTemplates?reset=1),
   go to the "System messages" subtab. Edit the "Contributions - Receipt (on-line)" template
   and add the token "Desjardins CC receipt", i.e. {contribution.desjardins_receipt} in the 
   "credit card information" section of the template (both HTML and text formats).
-
-* Override the templates/CRM/Contribute/Form/Contribution/ThankYou.tpl template and add
-  the following: {$trxn_id|civicrmdesjardins_receipt} in order to show the credit card
-  transaction receipt. (TODO: submit a patch to CiviCRM so that we can have this in core?)
-
-  For example:
-
-    <div class="crm-section no-label credit_card_details-section">
-{*
-      <div class="content">{$credit_card_type}</div>
-      <div class="content">{$credit_card_number}</div>
-      <div class="content">{ts}Expires{/ts}: {$credit_card_exp_date|truncate:7:''|crmDate}</div>
-*}
-      <div class="content">
-        <pre>{$trxn_id|civicrmdesjardins_receipt}
-      </div>
-      {if $membership_amount and $is_separate_payment}
-        <div class="content">
-          <pre>{$membership_trx_id|civicrmdesjardins_receipt}
-        </div>
-     {/if}
-      <div class="clear"></div>
-    </div>
 
 * In the receipt template, add a section with the "Terms and conditions", including
   your privacy policy, shipping fees (even if there are none) and refund policy.
