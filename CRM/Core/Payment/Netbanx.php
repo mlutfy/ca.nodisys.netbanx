@@ -516,36 +516,38 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
 
     $receipt .= self::getNameAndAddress() . "\n\n";
 
-    $receipt .= t('CREDIT CARD TRANSACTION RECORD') . "\n\n";
+    $receipt .= ts('CREDIT CARD TRANSACTION RECORD') . "\n\n";
 
-    $receipt .= t('Date: !date', array('!date' => $response->txnTime)) . "\n";
-    $receipt .= t('Transaction: !tx', array('!tx' => $this->invoice_id)) . "\n";
-    $receipt .= t('Type: purchase') . "\n"; // could be preauthorization, preauth completion, refund.
-    $receipt .= t('Authorization: !authcode', array('!authcode' => $response->authCode)) . "\n";
-    $receipt .= t('Confirmation: !confirm', array('!confirm' => $response->confirmationNumber)) . "\n";
-    $receipt .= t('Seq.: !seq  Batch: !batch', array('!seq' => $response->addendum['SEQ_NUMBER'], '!batch' => $response->addendum['BATCH_NUMBER'])) . "\n\n";
+    $receipt .= ts('Date: %1', array(1 => $response->txnTime)) . "\n";
+    $receipt .= ts('Transaction: %1', array(1 => $this->invoice_id)) . "\n";
+    $receipt .= ts('Type: purchase') . "\n"; // could be preauthorization, preauth completion, refund.
+    $receipt .= ts('Authorization: %1', array(1 => $response->authCode)) . "\n";
+    $receipt .= ts('Confirmation: %1', array(1 => $response->confirmationNumber)) . "\n";
 
-    $receipt .= t('Credit card: !type', array('!type' => $params['credit_card_type'])) . "\n";
-    $receipt .= t('Card holder name: !name', array('!name' => $params['first_name'] . ' ' . $params['last_name'])) . "\n";
-    $receipt .= t('Card number: !ccnum', array('!ccnum' => self::netbanxGetCardForReceipt($params['credit_card_number']))) . "\n\n";
+    // Not necessary, according to Netbanx rep.
+    // $receipt .= ts('Seq.: %1 Batch: %2', array(1 => $response->addendum['SEQ_NUMBER'], 2 => $response->addendum['BATCH_NUMBER'])) . "\n\n";
 
-    $receipt .= t('Purchase: !amount', array('!amount' => CRM_Utils_Money::format($params['amount']))) . "\n\n";
+    $receipt .= ts('Credit card type: %1', array(1 => $params['credit_card_type'])) . "\n";
+    $receipt .= ts('Credit card holder name: %1', array(1 => $params['first_name'] . ' ' . $params['last_name'])) . "\n";
+    $receipt .= ts('Credit card number: %1', array(1 => self::netbanxGetCardForReceipt($params['credit_card_number']))) . "\n\n";
+
+    $receipt .= ts('Transaction amount: %1', array(1 => CRM_Utils_Money::format($params['amount']))) . "\n\n";
 
     if ($response->decision == self::CIVICRM_NETBANX_PAYMENT_ACCEPTED) {
-      $receipt .= t('TRANSACTION APPROVED - THANK YOU') . "\n\n";
+      $receipt .= ts('TRANSACTION APPROVED - THANK YOU') . "\n\n";
     }
     elseif ($response->decision == self::CIVICRM_NETBANX_PAYMENT_ERROR) {
-      $receipt .= wordwrap(t('TRANSACTION CANCELLED - !description', array('!description' => $response->description))) . "\n\n";
+      $receipt .= wordwrap(ts('TRANSACTION CANCELLED - %1', array(1 => $response->description))) . "\n\n";
     }
     elseif ($response->decision == self::CIVICRM_NETBANX_PAYMENT_DECLINED) {
       $description = $response->description;
 
       // Silly.. but we try to translate as many messages as possible.
       if ($description == 'Your request has been declined by the issuing bank.') {
-        $description = t('Your request has been declined by the issuing bank.');
+        $description = ts('Your request has been declined by the issuing bank.');
       }
 
-      $receipt .= t('TRANSACTION DECLINED - !description', array('!description' => $description)) . "\n\n";
+      $receipt .= ts('TRANSACTION DECLINED - %1', array(1 => $description)) . "\n\n";
     }
     else {
       $receipt .= $response->decision . ' - ' . $response->description . "\n\n";
@@ -556,7 +558,7 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
       $tos_text = variable_get('civicrmdesjardins_tos_text', FALSE);
 
       if ($tos_url) {
-        $receipt .= t("Terms and conditions:") . "\n";
+        $receipt .= ts("Terms and conditions:") . "\n";
         $receipt .= $tos_url . "\n\n";
       }
 
@@ -567,8 +569,8 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
 
     // Add obligatory notes:
     $receipt .= "\n";
-    $receipt .= t("Prices are in canadian dollars ($ CAD).") . "\n";
-    $receipt .= t("This transaction is non-taxable.");
+    $receipt .= ts('Prices are in canadian dollars ($ CAD).') . "\n";
+    $receipt .= ts("This transaction is non-taxable.");
 
     return $receipt;
   }
