@@ -100,13 +100,6 @@ function netbanx_civicrm_buildForm_CRM_Contribute_Form_Contribution_Main(&$form)
  * Form: CRM_Contribute_Form_Contribution_ThankYou
  */
 function netbanx_civicrm_buildForm_CRM_Contribute_Form_Contribution_ThankYou(&$form) {
-dsm($form, 'form');
-dsm($form->get('trxn_id'), 'trxn_id');
-dsm($form->get('membership_trx_id'), 'membership_trx_id');
-
-$smarty = CRM_Core_Smarty::singleton();
-dsm($smarty->_tpl_vars, 'tplvars');
-
   // Adds the credit card receipt from Netbanx to the contribution ThankYou page
   CRM_Core_Region::instance('contribution-thankyou-billing-block')->add(array(
     'template' => 'CRM/Netbanx/Form/ThankYouReceipt.tpl',
