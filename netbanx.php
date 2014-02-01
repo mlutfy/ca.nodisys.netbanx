@@ -115,6 +115,52 @@ function netbanx_civicrm_receipt($trx_id) {
 }
 
 /**
+ * hook_civicrm_tokens() implementation
+ * expose the "receipt" token to email messages
+ */
+function netbanx_civicrm_tokens(&$tokens) {
+  $tokens['contribution'] = array(
+    'contribution.netbanx_receipt' => ts('Netbanx credit card receipt'),
+  );
+}
+
+/**
+ * hook_civicrm_tokenValues() implementation
+ * http://wiki.civicrm.org/confluence/display/CRMDOC/Hook+Reference#HookReference-hookcivicrmtokenValues
+ * http://civicrm.org/blogs/colemanw/create-your-own-tokens-fun-and-profit
+ */
+function netbanx_civicrm_tokenValues(&$values, $cids, $job = null, $tokens = array(), $context = null) {
+  // Only expose the token when doing online contributions
+  if (! (arg(0) == 'civicrm' && arg(1) == 'contribute')) {
+    return;
+  }
+
+  watchdog('netbanx', 'Context: ' . print_r($context, 1));
+  watchdog('netbanx', 'CIDs: ' . print_r($cids, 1));
+
+  foreach ($cids as $cid) {
+    // Fetch the receipt (assume latest for a given contact ID)
+    $params = array(
+      1 => array($cid, 'Positive'),
+    );
+    $dao = CRM_Core_DAO::executeQuery('SELECT trxn_id FROM civicrm_contribution WHERE contact_id = %1 order by receive_date desc limit 1', $params);
+
+    if (! $dao->fetch()) {
+      watchdog('netbanx', 'TX not found for ' . $contact_id);
+      CRM_Core_Error::debug_log_message('Netbanx receipt token failed for ' . $contact_id);
+    }
+
+    $tx = $dao->trxn_id;
+    watchdog('netbanx', 'TX found for ' . $contact_id . ' = ' . $tx);
+
+    // $tx = db_query("select invoice_id from {civicrm_contribution} where contact_id = :id order by receive_date desc limit 1", array(':id' => $cid))->fetchField();
+    $receipt = db_query("select receipt from {civicrmdesjardins_receipt} where trx_id = :tx", array(':tx' => $tx))->fetchField();
+  
+    $values[$cid]['contribution.netbanx_receipt'] = $receipt;
+  }
+}
+
+/**
  * Implementation of hook_civicrm_navigationMenu().
  */
 function netbanx_civicrm_navigationMenu(&$params) {
