@@ -37,9 +37,6 @@ INSTALLATION:
   English: "All amounts are in canadian dollars ($ CAD)".
   French: "Tous les montants sont en dollars canadiens ($ CAD)".
 
-* CRM-9491 : credit card information was not deleted from the session upon successful transaction.
-  Re-apply the patch to ThankYou.php as described in the issue, until it is resolved.
-
 Drupal variables:
 
 * Set the civicrmdesjardins_tos_url and civicrmdesjardins_tos_text variables, with respectively
@@ -55,28 +52,9 @@ Drupal variables:
   as multi-lingual (admin/config/regional/i18n/variable) then go to config > system > variables
   (admin/config/system/variable) to translate the variables.
 
-During the validation process by Desjardins:
-
-* Since the test environment of the payment gateway does not provide explicit numbers to
-  trigger invalid transactions, you must disable the credit card number checks done by
-  CiviCRM *only during the validation by Desjardins*.
-
-  In Contribute/Form/Contribution/Main.php, function formRule(), comment out the following
-  block of code:
-
-/* 
-    if ( CRM_Utils_Array::value( 'credit_card_number', $fields ) &&
-         ! CRM_Utils_Rule::creditCardNumber( $fields['credit_card_number'], $fields['credit_card_type'] ) ) {
-        $errors['credit_card_number'] = ts( 'Please enter a valid Credit Card Number' );
-    }
-*/
-
-  Once the site has been validated, you can re-enable (uncomment) the code.
-
-
-CAVEATS:
+TESTING
 -------
 
-* This module overrides your extension directory. (maybe we ought to find a better solution?)
-
-
+Along with regular and recurrent transactions (if supported), you should also test failed
+transations. You can trigger various types of errors by using specific amounts under 1$:
+https://developer.optimalpayments.com/en/documentation/card-payments-api/simulating-response-codes/
