@@ -4,64 +4,76 @@
  +--------------------------------------------------------------------+
  | Netbanx Payment Gateway Processor (post/autonomous)                |
  +--------------------------------------------------------------------+
- | Copyright Mathieu Lutfy 2010-2013                                  |
- | http://www.nodisys.ca/en                                           |
- +--------------------------------------------------------------------+
- | This file is part of the Payment gateway extension for CiviCRM.    |
+ | Copyright Mathieu Lutfy 2010-2015                                  |
+ | https://www.symbiotic.coop                                         |
  |                                                                    |
- | IMPORTANT:                                                         |
- | This is a community contributed extension. It is not endorsed or   |
- | supported by neither Desjardins nor CiviCRM. Use at your own risk. |
+ | This file is part of the ca.nodisys.netbanx extension.             |
+ | https://github.com/mlutfy/ca.nodisys.netbanx                       |
  |                                                                    |
- | LICENSE:                                                           |
- | This extension is free software; you can copy, modify, and         |
- | distribute it under the terms of the GNU Affero General Public     |
- | License Version 3, 19 November 2007.                               |
- |                                                                    |
- | This extension is distributed in the hope that it will be useful,  |
- | but WITHOUT ANY WARRANTY; without even the implied warranty of     |
- | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.               |
- | See the GNU Affero General Public License for more details.        |
- |                                                                    |
- | You should have received a copy of the GNU Affero General Public   |
- | License along with this program; if not, contact CiviCRM LLC       |
- | at info[AT]civicrm[DOT]org. If you have questions about the        |
- | GNU Affero General Public License or the licensing of CiviCRM,     |
- | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
+ | See README.md for more information (support, license, etc).        |
  +--------------------------------------------------------------------+
 */
 
 /**
+ * @file
+ *
  * Credit Card Payment Processor class for Netbanx (post/autonomous mode).
  */
 
 require_once 'CRM/Core/Payment.php';
 
 class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
-  // Netbanx services paths
+  // Netbanx SOAP services paths
   const CIVICRM_NETBANX_SERVICE_CREDIT_CARD = 'creditcardWS/CreditCardService';
 
-  // Netbanx stuff
+  // Netbanx SOAP responses
   const CIVICRM_NETBANX_PAYMENT_ACCEPTED = 'ACCEPTED';
   const CIVICRM_NETBANX_PAYMENT_DECLINED = 'DECLINED';
   const CIVICRM_NETBANX_PAYMENT_ERROR    = 'ERROR';
 
   /**
-   * We only need one instance of this object. So we use the singleton
-   * pattern and cache the instance in this variable
+   * Live auth endpoint.
    *
-   * @var object
-   * @static
+   * @var string
    */
-  static private $_singleton = null;
+  protected $live_auth_endpoint = 'https://api.netbanx.com/cardpayments/v1/accounts';
 
   /**
-   * mode of operation: live or test
+   * Test auth endpoint.
+   *
+   * @var string
+   */
+  protected $test_auth_endpoint = 'https://api.test.netbanx.com/cardpayments/v1/accounts';
+
+  /**
+   * Live Customer Vault endpoint.
+   *
+   * @var string
+   */
+  protected $live_customervault_endpoint = 'https://api.netbanx.com/customervault/v1/profiles';
+
+  /**
+   * Test Customer Vault endpoint.
+   *
+   * @var string
+   */
+  protected $test_customervault_endpoint = 'https://api.test.netbanx.com/customervault/v1/profiles';
+
+  /**
+   * We only need one instance of this object. So we use the singleton
+   * pattern and cache the instance in this variable.
    *
    * @var object
    * @static
    */
-  static protected $_mode = null;
+  static private $_singleton = NULL;
+
+  /**
+   * Mode of operation: live or test.
+   *
+   * @var string
+   */
+  protected $_mode = NULL;
 
   // IP of the visitor
   private $ip = 0;
@@ -80,24 +92,18 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
     $this->_mode = $mode;
     $this->_paymentProcessor = $paymentProcessor;
     $this->_processorName = ts('Netbanx');
-/*
-    $this->_profile['mode'] = $mode;
-    $this->_profile['user_name']  = $this->_paymentProcessor['user_name'];
-    $this->_profile['password'] = $this->_paymentProcessor['password'];
-    $this->_profile['subject'] = $this->_paymentProcessor['subject'];
-*/
   }
 
   /**
-   * Singleton function used to manage this object
+   * Singleton function used to manage this object.
    *
-   * @param string $mode the mode of operation: live or test
+   * @param string $mode the mode of operation: live or test.
    *
    * @return object
    * @static
    *
    */
-  static function &singleton($mode, &$paymentProcessor) {
+  static function &singleton($mode, &$paymentProcessor, &$paymentForm = NULL, $force = false) {
     $processorName = $paymentProcessor['name'];
     if (self::$_singleton[$processorName] === NULL) {
       self::$_singleton[$processorName] = new self($mode, $paymentProcessor);
@@ -106,9 +112,7 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
   }
 
   /**
-   * Submit a payment using the Netbanx API:
-   * http://support.optimalpayments.com/docapi.asp
-   * http://support.optimalpayments.com/test_environment.asp
+   * Submit a payment using the Netbanx API.
    *
    * @param array $params assoc array of input parameters for this transaction
    *
@@ -122,10 +126,6 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
 
     $this->ip = $params['ip_address'];
     $this->invoice_id = $params['invoiceID'];
-
-    if ($params['currencyID'] != 'CAD') {
-       # [ML] FIXME return self::error('Invalid currency selection, must be CAD');
-    }
 
 /*
     // Fraud-protection: Validate the postal code
@@ -143,11 +143,10 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
     }
 */
 
-    self::log($params, 'civicrm params');
+    $this->log($params, 'civicrm params');
 
-    // NETBANX START
     $data = array(
-      'merchantAccount' => self::netbanxMerchantAccount(),
+      'merchantAccount' => $this->netbanxMerchantAccount(),
       'merchantRefNum' => $this->invoice_id,  // string max 255 chars
       'amount' => self::netbanxGetAmount($params),
       'card' => self::netbanxGetCard($params),
@@ -155,26 +154,103 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
       'billingDetails' => self::netbanxGetBillingDetails($params),
     );
 
-    $response = self::netbanxPurchase($data);
+    if ($this->_mode == 'test') {
+      $data = array(
+        'merchantRefNum' => $this->invoice_id,  // string max 255 chars
+        'settleWithAuth' => TRUE,
+        'amount' => self::netbanxGetAmount($params),
+        'customerIp' => $params['ip_address'],
+      );
 
-    if (! $response) {
-      return self::netbanxFailMessage('NBX010', 'netbanx response null', $params);
+      if (CRM_Utils_Array::value('is_recur', $params)) {
+        // TODO: This is not yet fully handled. It will create the
+        // customer, address and card in Netbanx's Customer Vault,
+        // but the resulting token is not saved in CiviCRM for regular
+        // processing.
+        $frequency = $params['frequency_unit'];
+        $installments = $params['installments'];
+
+        $vault = $this->netbanxCustomerVaultCreate([
+          // NB: we would have to manage locally which customers always exist,
+          // and we don't really care about duplicates, so just create a new
+          // profile for each recurrent transaction (there shouldn't be that many).
+          'merchantCustomerId' => $params['invoiceID'],
+          'locale' => $this->netbanxGetLocale($params),
+          'firstName' => $params['first_name'],
+          'lastName' => $params['last_name'],
+          'email' => $params['email-5'],
+          // FIXME not ideal, assumes billing-phone in profile:
+          'phone' => CRM_Utils_Array::value('phone-5-1', $params),
+          'ip' => $params['ip_address'],
+          'addresses' => [
+            $this->netbanxGetBillingDetails($params, TRUE),
+          ],
+          'cards' => [
+            $this->netbanxGetCard($params, TRUE),
+          ],
+        ]);
+
+        $data['card'] = array(
+          'paymentToken' => $vault['paymentToken'],
+        );
+      }
+      else {
+        $data['billingDetails'] = $this->netbanxGetBillingDetails($params);
+        $data['profile'] = $this->netbanxGetProfileDetails($params);
+        $data['card'] = $this->netbanxGetCard($params);
+      }
     }
 
-    if ($response->decision != self::CIVICRM_NETBANX_PAYMENT_ACCEPTED) {
-      $receipt = self::generateReceipt($params, $response, FALSE);
-      return self::netbanxFailMessage($receipt, 'netbanx response declined', $params, $response);
+    try {
+      if ($this->_mode == 'test') {
+        $response = $this->netbanxAuthorize($data);
+      }
+      else {
+        $response = self::netbanxPurchaseSoap($data);
+      }
+
+      if ($response == NULL) {
+        return self::netbanxFailMessage('NBX010', 'netbanx response null', $params);
+      }
+    }
+    catch (Exception $e) {
+      $this->log('Netbanx error: ' . $e->getMessage(), 'netbanx purchase fail', TRUE);
+      return self::error(ts('There was a communication problem with the payment processor. Please try again, or contact us for more information.'));
     }
 
-    // Success
-    $params['trxn_id']       = $response->confirmationNumber;
-    $params['gross_amount']  = $data['amount'];
+    if ($this->_mode == 'test') {
+      if ($response['status'] != 'COMPLETED') {
+        $receipt = $this->generateReceipt($params, $response, FALSE);
+        return $this->netbanxFailMessage($receipt, 'netbanx authorization declined', $params, $response);
+      }
 
-    // Assigning the receipt to the $params doesn't really do anything
-    // In previous versions, we would patch the core in order to show the receipt.
-    // It would be nice to have something in CiviCRM core in order to handle this.
-    $params['receipt_netbanx'] = self::generateReceipt($params, $response);
-    $params['trxn_result_code'] = $response->confirmationNumber . "-" . $response->authCode . "-" . $response->cvdResponse . "-" . $response->avsResponse;
+      // Success
+      $params['trxn_id']       = $response['id'];
+      # what? $params['gross_amount']  = $data['amount'];
+
+      // Assigning the receipt to the $params doesn't really do anything
+      // In previous versions, we would patch the core in order to show the receipt.
+      // It would be nice to have something in CiviCRM core in order to handle this.
+      $params['receipt_netbanx'] = self::generateReceipt($params, $response);
+      $params['trxn_result_code'] = $response['id'];
+    }
+    else {
+      // SOAP API
+      if ($response->decision != self::CIVICRM_NETBANX_PAYMENT_ACCEPTED) {
+        $receipt = self::generateReceiptOld($params, $response, FALSE);
+        return self::netbanxFailMessage($receipt, 'netbanx response declined', $params, $response);
+      }
+
+      // Success
+      $params['trxn_id']       = $response->confirmationNumber;
+      $params['gross_amount']  = $data['amount'];
+
+      // Assigning the receipt to the $params doesn't really do anything
+      // In previous versions, we would patch the core in order to show the receipt.
+      // It would be nice to have something in CiviCRM core in order to handle this.
+      $params['receipt_netbanx'] = self::generateReceiptOld($params, $response);
+      $params['trxn_result_code'] = $response->confirmationNumber . "-" . $response->authCode . "-" . $response->cvdResponse . "-" . $response->avsResponse;
+    }
 
     db_query("INSERT INTO {civicrmdesjardins_receipt} (trx_id, receipt, first_name, last_name, card_type, card_number, timestamp, ip)
               VALUES (:trx_id, :receipt, :first_name, :last_name, :card_type, :card_number, :timestamp, :ip)",
@@ -209,6 +285,8 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
   /**
    * Extracts the transaction amount
    * Returns in the format: 20.50
+   *
+   * NB: new REST API uses format 2500 for 25$
    */
   function netbanxGetAmount($params) {
     $amount = 0;
@@ -223,6 +301,11 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
     // format: 10.00
     $amount = number_format($amount, 2, '.', '');
 
+    // REST API expects an integer amount.
+    if ($this->_mode == 'test') {
+      $amount = $amount * 100;
+    }
+
     return $amount;
   }
 
@@ -230,7 +313,7 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
    * Extracts the credit card info.
    * Returns an array.
    */
-  function netbanxGetCard($params) {
+  function netbanxGetCard($params, $is_vault = FALSE) {
     $card = array(
       'cardNum' => $params['credit_card_number'],
       'cardExpiry' => array(
@@ -241,9 +324,19 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
 
     // Add security code.
     if (! empty($params['cvv2'])) {
-      $card['cvdIndicator'] = 1;
-      $card['cvdIndicatorSpecified'] = TRUE;
-      $card['cvd'] = $params['cvv2'];
+      if ($this->_mode == 'test') {
+        $card['cvv'] = $params['cvv2'];
+      }
+      else {
+        $card['cvdIndicator'] = 1;
+        $card['cvdIndicatorSpecified'] = TRUE;
+        $card['cvd'] = $params['cvv2'];
+      }
+    }
+
+    if ($is_vault) {
+      $card['nickName'] = $params['credit_card_type'];
+      $card['holderName'] = $params['first_name'] . ' ' . $params['last_name'];
     }
 
     return $card;
@@ -253,41 +346,167 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
    * Extracts the billing details info.
    * Returns an array.
    */
-  function netbanxGetBillingDetails($params) {
+  function netbanxGetBillingDetails($params, $is_vault = FALSE) {
     $billing = array(
-      'firstName' => $params['first_name'],
-      'lastName' => $params['last_name'],
       'street' => $params['street_address'],
       'city' => $params['city'],
       'country' => $params['country'],
-      'countrySpecified' => TRUE,
       'zip' => $params['postal_code'],
-      'email' => $params['email-Primary'],
     );
+
+    if ($this->_mode != 'test') {
+      $billing['firstName'] = $params['first_name'];
+      $billing['lastName'] = $params['last_name'];
+      $billing['countrySpecified'] = TRUE;
+      $billing['email'] = $params['email-5'];
+    }
 
     // Add state or region based on country
     if (in_array($params['country'], array('US', 'CA'))) {
       $billing['state'] = $params['state_province'];
     }
-    else {
+    elseif ($this->_mode != 'test') {
       $billing['region'] = $params['state_province'];
     }
 
+    if ($is_vault) {
+      $billing['nickName'] = 'Billing address';
+    }
+
     return $billing;
+  }
+
+  function netbanxGetProfileDetails($params) {
+    $profile = array(
+      'firstName' => $params['first_name'],
+      'lastName' => $params['last_name'],
+      'email' => (isset($params['email-Primary']) ? $params['email-Primary'] : $params['email-5']),
+    );
+
+    return $profile;
+  }
+
+  /**
+   * Convert the locale/language to an accepted format. Defaults to en_US.
+   *
+   * This assumes that you have the preferred_language field included in your
+   * contribution/event form profile. We should probably also check the default
+   * site locale for non-multilingual sites.
+   */
+  function netbanxGetLocale($params) {
+    // Netbanx only supports fr_CA, en_US and en_UK.
+    $map = array(
+      'fr_CA' => 'fr_CA',
+      'fr_FR' => 'fr_CA',
+      'en_US' => 'en_US',
+      'en_GB' => 'en_GB',
+    );
+
+    if ($locale = CRM_Utils_Array::value('preferred_language', $params)) {
+      if (isset($map[$locale])) {
+        return $map[$locale];
+      }
+    }
+
+    return 'en_US';
+  }
+
+  /**
+   * Sends an authorization request to the REST API of Netbanx.
+   */
+  function netbanxAuthorize($data) {
+    $webservice_url = $this->getAuthorizationEndpoint();
+    return $this->netbanxSendRequest($webservice_url, $data, 'auth');
+  }
+
+  /**
+   * Stores the customer profile in the Netbanx Custom Vault API.
+   */
+  function netbanxCustomerVaultCreate($data) {
+    $webservice_url = $this->getCustomerVaultEndpoint();
+    $profile = $this->netbanxSendRequest($webservice_url, $data, 'customervault');
+
+    if ($profile['id']) {
+      $address = $this->netbanxSendRequest($webservice_url . '/' . $profile['id'] . '/addresses', $data['addresses'][0]);
+      $card = $this->netbanxSendRequest($webservice_url . '/'  . $profile['id'] . '/cards', $data['cards'][0] + array('billingAddressId' => $address['id']));
+
+      return $card;
+    }
+
+    return NULL;
+  }
+
+  function netbanxSendRequest($webservice_url, $data, $description) {
+    require_once 'vendor/autoload.php';
+    $client = new GuzzleHttp\Client();
+
+    $json = NULL;
+
+    self::log($data, 'netbanx request ' . $description);
+
+    try {
+      $api_username = $this->_paymentProcessor['user_name'];
+      $api_key = $this->_paymentProcessor['password'];
+
+      $headers = [
+        'Content-Type' => 'application/json',
+        'Authorization' => 'Basic ' . base64_encode($api_username . ':' . $api_key),
+      ];
+
+      $req = $client->createRequest('POST', $webservice_url, [
+        'body' => json_encode($data),
+        'headers' => $headers,
+        // FIXME: this is to avoid getting vague exceptions that do not explain
+        // the actual communication error (ex: Netbanx error description), but
+        // perhaps not the best practice?
+        'exceptions' => false,
+      ]);
+
+      $response = $client->send($req);
+      $json = $response->json();
+
+      $this->log($json, 'netbanx response ' . $description);
+    }
+    catch (RequestException $e) {
+      $this->log($e->getMessage(), 'netbanx request exception');
+      return NULL;
+    }
+    catch (Exception $e) {
+      $this->log($e->getMessage(), 'netbanx generic exception');
+      return NULL;
+    }
+
+    return $json;
   }
 
   /**
    * Initiates the soap client
    * see @netbanxPurchase()
    */
-  function netbanxGetSoapClient($service) {
+  function netbanxGetSoapClient($service, $data) {
     $wsdl_url = $this->netbanxGetWsdlUrl($service);
-    return new SoapClient($wsdl_url);
+
+    $opts = array(
+      'http' => array(
+        'user_agent' => 'PHPSoapClient'
+      ),
+      'cache_wsdl' => WSDL_CACHE_NONE,
+    );
+
+    $context = stream_context_create($opts);
+
+    $wsdl_url = CRM_Core_Resources::singleton()->getPath('ca.nodisys.netbanx', 'creditcardservice-v1.wsdl');
+
+    return new SoapClient($wsdl_url, array(
+      'stream_context' => $context,
+      'cache_wsdl' => WSDL_CACHE_NONE, // or WSDL_CACHE_MEMORY WSDL_CACHE_NONE,?
+      'trace' => TRUE,
+    ));
   }
 
   /**
    * Returns the appropriate web service URL
-   * see @netbanxPurchase()
+   *
    * FIXME: should use civicrm gateway settings, not hardcode URLs
    */
   function netbanxGetWsdlUrl($service) {
@@ -308,17 +527,41 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
   }
 
   /**
+   * Returns the appropriate endpoint URL to process Authorization requests.
+   */
+  function getAuthorizationEndpoint() {
+    $url = ($this->_mode == 'test' ? $this->test_auth_endpoint : $this->live_auth_endpoint);
+    $merchant_number = $this->_paymentProcessor['subject'];
+
+    return $url . '/' . $merchant_number . '/auths';
+  }
+
+  /**
+   * Returns the appropriate endpoint URL to process Customer Vault requests.
+   */
+  function getCustomerVaultEndpoint() {
+    $url = ($this->_mode == 'test' ? $this->test_customervault_endpoint : $this->live_customervault_endpoint);
+    $merchant_number = $this->_paymentProcessor['subject'];
+
+    return $url;
+  }
+
+  /**
    * Send the purchase request to Netbanx
    */
-  function netbanxPurchase($data) {
+  function netbanxPurchaseSoap($data) {
     self::log($data, 'netbanx request');
 
-    $netbanx = $this->netbanxGetSoapClient(self::CIVICRM_NETBANX_SERVICE_CREDIT_CARD);
-    $response = $netbanx->ccPurchase(array('ccAuthRequestV1' => $data));
+    $netbanx = $this->netbanxGetSoapClient(self::CIVICRM_NETBANX_SERVICE_CREDIT_CARD, $data);
 
+    if (! $netbanx) {
+      return NULL;
+    }
+
+    $response = $netbanx->ccPurchase(array('ccAuthRequestV1' => $data));
     $v1 = $response->ccTxnResponseV1;
 
-    // re-order the vender-specific data (ex: Desjardins)
+    // re-order the vendor-specific data (ex: Desjardins)
     // otherwise it's an array and doesn't look very reliable:
     /*
      [detail] => Array (
@@ -355,7 +598,7 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
    * FIXME: this is not very clean..
    */
   function netbanxFailMessage($code, $errtype, $request = NULL, $response = NULL) {
-    self::log($response, 'netbanx response null', TRUE);
+    self::log($response, $errtype, TRUE);
 
     // FIXME: format: self::error(9003, 'Message here'); ?
     if (is_numeric($code)) {
@@ -365,7 +608,34 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
 
     return self::error(t('The transaction could not be processed, please contact us for more information.')
            . '<div class="civicrm-dj-retrytx">' . t("The transaction was not approved. Please verify your credit card number and expiration date.") . '</div>'
+           . '<div><strong>̈́' . $this->getErrorMessageTranslation($response) . '</strong></div>'
            . '<br/><pre class="civicrm-dj-receiptfail">' . $code . '</pre>');
+  }
+
+  /**
+   * Returns a translated error message for the more common errors.
+   * Otherwise it returns the original English message.
+   *
+   * https://developer.optimalpayments.com/en/documentation/card-payments-api/simulating-response-codes/
+   */
+  function getErrorMessageTranslation($response) {
+    // Legacy soap call, but also to avoid weird errors (will cause fatal errors if it's not an object)
+    if (! is_array($response)) {
+      return '';
+    }
+
+    if (! isset($response['error']) || ! isset($response['error']['message'])) {
+      return ts('Unknown error.');
+    }
+
+    return ts($response['error']['message']) . ' (' . $response['error']['code'] . ')';
+
+    // This is intentionally here so that the gettext string extractor will pickup the strings for the .pot files.
+    ts("The bank has requested that you process the transaction manually by calling the card holder's credit card company.");
+    ts('Your request has been declined by the issuing bank.');
+    ts('The card has been declined due to insufficient funds.');
+    ts('Your request has been declined because the issuing bank does not permit the transaction for this card.');
+    ts('An internal error occurred.');
   }
 
   /**
@@ -496,23 +766,101 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
       $fail = 0;
     }
 
+    // If the 'reporterror' extension is enabled, send an email for fatal errors.
+    if ($fail && function_exists('reporterror_civicrm_handler')) {
+      $variables = array(
+        'message' => $type,
+        'body' => $message,
+      );
+
+      reporterror_civicrm_handler($variables);
+    }
+
     db_query("INSERT INTO {civicrmdesjardins_log} (trx_id, timestamp, type, message, fail, ip)
                VALUES (:trx_id, :timestamp, :type, :message, :fail, :ip)",
               array(':trx_id' => $this->invoice_id, ':timestamp' => $time, ':type' => $type, ':message' => $message, ':fail' => $fail, ':ip' => $this->ip));
   }
 
   /**
+   * Generates a human-readable receipt using the purchase response from Netbanx.
+   *
+   * @param $params Array of form data.
+   * @param $response Array of the Netbanx response.
+   */
+  function generateReceipt($params, $response) {
+    $receipt = '';
+
+    // CiviCRM's invoice ID.
+    $trx_id = $this->invoice_id;
+
+    $receipt .= self::getNameAndAddress() . "\n\n";
+
+    $receipt .= ts('CREDIT CARD TRANSACTION RECORD') . "\n\n";
+
+    if (isset($response['txnTime'])) {
+      $receipt .= ts('Date: %1', array(1 => $response['txnTime'])) . "\n";
+    }
+    else {
+      $receipt .= ts('Date: %1', array(1 => date('Y-m-d H:i:s'))) . "\n";
+    }
+
+    $receipt .= ts('Transaction: %1', array(1 => $this->invoice_id)) . "\n";
+    $receipt .= ts('ID: %1', array(1 => $response['id'])) . "\n";
+    $receipt .= ts('Type: purchase') . "\n"; // could be preauthorization, preauth completion, refund.
+    $receipt .= ts('Authorization: %1', array(1 => $response['authCode'])) . "\n";
+
+    $receipt .= ts('Credit card type: %1', array(1 => $params['credit_card_type'])) . "\n";
+    $receipt .= ts('Credit card holder name: %1', array(1 => $params['first_name'] . ' ' . $params['last_name'])) . "\n";
+    $receipt .= ts('Credit card number: %1', array(1 => self::netbanxGetCardForReceipt($params['credit_card_number']))) . "\n\n";
+
+    $receipt .= ts('Transaction amount: %1', array(1 => CRM_Utils_Money::format($params['amount']))) . "\n\n";
+
+    switch ($response['status']) {
+      case 'COMPLETED':
+        $receipt .= ts('TRANSACTION APPROVED - THANK YOU') . "\n\n";
+        break;
+
+      case 'FAILED':
+      default:
+        $receipt .= ts('TRANSACTION FAILED') . "\n\n";
+
+        if (isset($response['error'])) {
+          $receipt .= wordwrap($this->getErrorMessageTranslation($response)) . "\n\n";
+        }
+    }
+
+    if (function_exists('variable_get')) {
+      $tos_url  = variable_get('civicrmdesjardins_tos_url', FALSE);
+      $tos_text = variable_get('civicrmdesjardins_tos_text', FALSE);
+
+      if ($tos_url) {
+        $receipt .= ts("Terms and conditions:") . "\n";
+        $receipt .= $tos_url . "\n\n";
+      }
+
+      if ($tos_text) {
+        $receipt .= wordwrap($tos_text);
+      }
+    }
+
+    // Add obligatory notes:
+    $receipt .= "\n";
+    $receipt .= ts('Prices are in canadian dollars ($ CAD).') . "\n";
+    $receipt .= ts("This transaction is non-taxable.");
+
+    return $receipt;
+  }
+
+  /**
    * Generates a human-readable receipt using the purchase response from Desjardins.
    * trx_id : CiviCRM transaction ID
    * amount : numeric amount of the transcation
-   * purchase : response from Netbanx (object)
    * success : whether this is a receipt for a successful or failed transaction (not really used)
    */
-  function generateReceipt($params, $response, $success = TRUE) {
+  function generateReceiptOld($params, $response, $success = TRUE) {
     $receipt = '';
 
     $trx_id = $this->invoice_id; // CiviCRM's ID
-    $tx = $purchase->merchant->transaction;
 
     $receipt .= self::getNameAndAddress() . "\n\n";
 
@@ -523,9 +871,6 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
     $receipt .= ts('Type: purchase') . "\n"; // could be preauthorization, preauth completion, refund.
     $receipt .= ts('Authorization: %1', array(1 => $response->authCode)) . "\n";
     $receipt .= ts('Confirmation: %1', array(1 => $response->confirmationNumber)) . "\n";
-
-    // Not necessary, according to Netbanx rep.
-    // $receipt .= ts('Seq.: %1 Batch: %2', array(1 => $response->addendum['SEQ_NUMBER'], 2 => $response->addendum['BATCH_NUMBER'])) . "\n\n";
 
     $receipt .= ts('Credit card type: %1', array(1 => $params['credit_card_type'])) . "\n";
     $receipt .= ts('Credit card holder name: %1', array(1 => $params['first_name'] . ' ' . $params['last_name'])) . "\n";
@@ -602,5 +947,4 @@ class CRM_Core_Payment_Netbanx extends CRM_Core_Payment {
     return $receipt;
   }
 }
-
 
