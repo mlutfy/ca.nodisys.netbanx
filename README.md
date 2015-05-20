@@ -14,10 +14,10 @@ FEATURES
 * Credit card payments using public or backend CiviCRM forms
 * CVV2
 * Supports Desjardins (logo)
+* Partial recurring support.
 
 Not supported at the moment:
 
-* Recurrent payments
 * 3D-secure
 * AVS (address verification service)
 * Interac online
@@ -38,9 +38,10 @@ See the INSTALL.txt file.
 TODO
 ----
 
+* 4.6 support: https://issues.civicrm.org/jira/browse/CRM-15555
 * Remove mentions to Desjardins, replace by Netbanx.
 * Make logo customizable (currently defaults to Desjardins).
-* Support recurrent billing (ex: monthly donations).
+* Fully support recurrent billing (ex: monthly donations, see below).
 * UI to configure the civicrmdesjardins_tos_text and civicrmdesjardins_tos_url variables.
   (you can use the 'variable' module to configure them)
 * More hook_requirements to have a clearer checklist of what needs to be done before having
@@ -51,12 +52,22 @@ TODO
 * Propose a patch to CiviCRM so that we have a standard way of displaying the receipt in the
   ThankYou.tpl, so that we do not need to systematically override the template.
 
+RECURRENT BILLING
+-----------------
+
+Currently the recurrent billing (ex: monthly donations) will create a customer
+profile, address and card in the customer vault, and will process the payment
+using the token that was generated.
+
+The extension does not currently save the token for regular processing (spare time only goes
+so far). Please send patches or sponsor development if you need this.
+
 MORE INFORMATION ABOUT NETBANX
 ------------------------------
 
 Technical information about the payment gateway:
 
-REST POST API:  
+REST Card Payments (POST) API:  
 https://developer.optimalpayments.com/en/documentation/card-payments-api/
 
 Old SOAP-WS API:  

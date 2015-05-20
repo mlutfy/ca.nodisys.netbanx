@@ -6,10 +6,12 @@ REQUIREMENTS:
 
 * The "curl" PHP library. Under Debian, apt-get install php5-curl.
   This library is necessary for when communicating credit card information
-  with the payment gateway.
+  with the payment gateway. (NB: only required for the old SOAP API).
 
 INSTALLATION:
 ------------
+
+* Run 'composer install' from the command line to download the Guzzle PHP library.
 
 * Enable this extension in CiviCRM (Admin > System Settings > Extensions).
 
