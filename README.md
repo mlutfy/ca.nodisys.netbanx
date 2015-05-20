@@ -2,10 +2,10 @@ Netbanx (Optimal Payments) payment processor for CiviCRM
 ========================================================
 
 This extension makes it possible to use Netbanx as a payment gateway in CiviCRM.
-It supports the payment method "without redirection" (process, not notify).
-In Netbanx terms, this is a "hosted payment page - autonomous".
+It supports the payment method "without redirection" (post, not notify).
+In Netbanx terms, this is the "Card Payments API".
 
-The latest version of this extension can be found at:
+The latest version of this extension can be found at:  
 https://github.com/mlutfy/ca.nodisys.netbanx
 
 FEATURES
@@ -25,8 +25,8 @@ Not supported at the moment:
 REQUIREMENTS
 ------------
 
-* CiviCRM >= 4.2
-* Tested with CiviCRM 4.2 to 4.4
+* CiviCRM >= 4.4
+* PHP >= 5.4
 * Your site must be conform to PCI-DSS requirements.
 * The "curl" PHP library. Under Debian, apt-get install php5-curl.
 
@@ -55,11 +55,16 @@ MORE INFORMATION ABOUT NETBANX
 ------------------------------
 
 Technical information about the payment gateway:
-http://support.optimalpayments.com/docapi.asp
+
+REST POST API:  
+https://developer.optimalpayments.com/en/documentation/card-payments-api/
+
+Old SOAP-WS API:  
+http://support.optimalpayments.com/docapi.asp  
 http://support.optimalpayments.com/test_environment.asp
 
 To open an account, contact Optimal Payments sales via their website.
-If you are with Desjardins, contact Desjardins merchant services.
+If you are a Desjardins custom, contact Desjardins merchant services.
 
 This module is in no way affiliated, endorsed or supported by Desjardins,
 Netbanx/Optimal Solutions or Visa/Mastercard.
@@ -67,41 +72,31 @@ Netbanx/Optimal Solutions or Visa/Mastercard.
 SUPPORT
 -------
 
-Please post bug reports in the issue tracker of this project on github:
+Please post bug reports in the issue tracker of this project on github:  
 https://github.com/mlutfy/ca.nodisys.netbanx/issues
 
-For general support questions, please use the CiviCRM Extensions forum:
+For general support questions, please use the CiviCRM Extensions forum:  
 http://forum.civicrm.org/index.php/board,57.0.html
 
 This is a community contributed extension written thanks to the financial
 support of organisations using it, as well as the very helpful and collaborative
 CiviCRM community.
 
-If you appreciate this module, please consider donating 10$ to the CiviCRM project:
-http://civicrm.org/participate/support-civicrm
-
 While I do my best to provide volunteer support for this extension, please
 consider financially contributing to support or development of this extension
 if you can.
-http://www.nodisys.ca/en
 
-CREDITS
--------
-
-Copyright (C) 2011-2013 Mathieu Lutfy <mathieu@nodisys.ca>
-http://www.nodisys.ca
-
-Thanks to Henrique Recidive for his commerce_netbanx module, which helped
-to understand the Netbanx spec:
-http://drupal.org/project/commerce_netbanx
+Commercial support is available through Coop SymbioTIC:  
+https://www.symbiotic.coop
 
 LICENSE
 -------
 
-License: AGPL 3
+Copyright (C) 2011-2015 Mathieu Lutfy <mathieu@symbiotic.coop>  
+https://www.symbiotic.coop
 
-Copyright (C) 2011-2013 Mathieu Lutfy (mathieu@bidon.ca)
-http://www.nodisys.ca/en
+License: AGPL v3: https://www.gnu.org/licenses/agpl.html
 
-For more information: https://civicrm.org/what/licensing
-
+Thanks to Henrique Recidive for his commerce_netbanx module, which helped
+to understand the Netbanx spec:  
+http://drupal.org/project/commerce_netbanx
