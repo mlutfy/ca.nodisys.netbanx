@@ -107,6 +107,16 @@ function netbanx_civicrm_buildForm_CRM_Contribute_Form_Contribution_ThankYou(&$f
 }
 
 /**
+ * Form: CRM_Event_Form_Registration_ThankYou
+ */
+function netbanx_civicrm_buildForm_CRM_Event_Form_Registration_ThankYou(&$form) {
+  // Adds the credit card receipt from Netbanx to the event ThankYou page
+  CRM_Core_Region::instance('event-thankyou-billing-block')->add(array(
+    'template' => 'CRM/Netbanx/Form/ThankYouReceipt.tpl',
+  ));
+}
+
+/**
  * Returns the Netbanx receipt for the CC transaction
  * Called from CRM/Netbanx/Form/ThankYouReceipt.tpl
  */
@@ -131,7 +141,7 @@ function netbanx_civicrm_tokens(&$tokens) {
  */
 function netbanx_civicrm_tokenValues(&$values, $cids, $job = null, $tokens = array(), $context = null) {
   // Only expose the token when doing online contributions
-  if (! (arg(0) == 'civicrm' && arg(1) == 'contribute')) {
+  if (! (arg(0) == 'civicrm' && (arg(1) == 'contribute' || arg(1) == 'event'))) {
     return;
   }
 
