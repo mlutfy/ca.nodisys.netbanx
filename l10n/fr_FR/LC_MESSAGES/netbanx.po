@@ -1,0 +1,156 @@
+#: CRM/Core/Payment/Netbanx.php
+msgid "Netbanx"
+msgstr "Netbanx"
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "There was a communication problem with the payment processor. Please try again, or contact us for more information."
+msgstr "Une erreur de communicaton est survenue avec la passerelle de paiement. Veuillez essayer de nouveau. Contactez-nous pour plus d'information."
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "Unknown error."
+msgstr "Erreur inconnue."
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "The bank has requested that you process the transaction manually by calling the card holder's credit card company."
+msgstr "Votre institution financière a demandé que la transaction soit validée manuellement par téléphone."
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "Your request has been declined by the issuing bank."
+msgstr "Votre demande a été refusée par votre institution financière."
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "The card has been declined due to insufficient funds."
+msgstr "La carte a été refusée en raison de fonds insuffisants."
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "Your request has been declined because the issuing bank does not permit the transaction for this card."
+msgstr "Votre demande a été refusée parce que votre institution financière ne permet pas ce type de transaction pour cette carte."
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "An internal error occurred."
+msgstr "Une erreur interne est survenue."
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "Merchant ID is not set in the Administer CiviCRM &raquo; Payment Processor."
+msgstr "Le numéro de marchand n'a pas été configuré dans Administration &raquo; Passerelles de paiement."
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "Password is not set in the Administer CiviCRM &raquo; Payment Processor."
+msgstr "Le mot de passe n'a pas été configuré dans Administration &raquo; Passerelles de paiement."
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "CREDIT CARD TRANSACTION RECORD"
+msgstr "RELEVÉ DE TRANSACTION PAR CARTE DE CRÉDIT"
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "Date: %1"
+msgstr "Date : %1"
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "Transaction: %1"
+msgstr "Transaction : %1"
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "ID: %1"
+msgstr "ID : %1"
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "Type: purchase"
+msgstr "Type : achat"
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "Authorization: %1"
+msgstr "Autorisation : %1"
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "Credit card type: %1"
+msgstr "Type de carte : %1"
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "Credit card holder name: %1"
+msgstr "Nom sur la carte de crédit : %1"
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "Credit card number: %1"
+msgstr "Numéro de carte de crédit : %1"
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "Transaction amount: %1"
+msgstr "Montant de la transaction : %1"
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "TRANSACTION APPROVED - THANK YOU"
+msgstr "TRANSACTION ACCEPTÉE - MERCI"
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "TRANSACTION FAILED"
+msgstr "TRANSACTION REFUSÉE"
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "Terms and conditions:"
+msgstr "Modalités et conditions :"
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "Prices are in canadian dollars ($ CAD)."
+msgstr "Les prix sont en dollars canadiens ($ CAD)."
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "This transaction is non-taxable."
+msgstr "Cette transaction est non-taxable."
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "Confirmation: %1"
+msgstr "Confirmation : %1"
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "TRANSACTION CANCELLED - %1"
+msgstr "TRANSACTION ANNULÉE - %1"
+
+#: CRM/Core/Payment/Netbanx.php
+msgid "TRANSACTION DECLINED - %1"
+msgstr "TRANSACTION REFUSÉE - %1"
+
+#: CRM/Netbanx/Form/NetbanxSettings.php
+msgid "Do not display a logo"
+msgstr "Ne pas afficher de logo"
+
+#: CRM/Netbanx/Form/NetbanxSettings.php
+msgid "Netbanx (standard logo)"
+msgstr ""
+
+#: CRM/Netbanx/Form/NetbanxSettings.php
+msgid "Netbanx (UK cards)"
+msgstr ""
+
+#: CRM/Netbanx/Form/NetbanxSettings.php
+msgid "Netbanx (Visa/MasterCard/Amex)"
+msgstr ""
+
+#: CRM/Netbanx/Form/NetbanxSettings.php
+msgid "Netbanx (Visa/MasterCard)"
+msgstr ""
+
+#: CRM/Netbanx/Form/NetbanxSettings.php
+msgid "Netbanx (all cards)"
+msgstr ""
+
+#: CRM/Netbanx/Form/NetbanxSettings.php
+msgid "Desjardins"
+msgstr "Desjardins"
+
+#: CRM/Netbanx/Form/NetbanxSettings.php templates/CRM/Netbanx/Form/NetbanxSettings.hlp
+msgid "Logo to display"
+msgstr ""
+
+#: CRM/Netbanx/Form/NetbanxSettings.php
+msgid "Submit"
+msgstr "Soumettre"
+
+#: CRM/Netbanx/Form/NetbanxSettings.php
+msgid "Settings saved."
+msgstr ""
+
+#: templates/CRM/Netbanx/Form/NetbanxSettings.hlp
+msgid "Save"
+msgstr ""
+

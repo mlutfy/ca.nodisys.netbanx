@@ -1,6 +1,7 @@
 <?php
 
 require_once 'netbanx.civix.php';
+use CRM_Netbanx_ExtensionUtil as E;
 
 define('NETBANX_SETTINGS_GROUP', 'Netbanx Extension');
 
