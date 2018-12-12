@@ -146,9 +146,6 @@ function netbanx_civicrm_tokenValues(&$values, $cids, $job = null, $tokens = arr
     return;
   }
 
-  watchdog('netbanx', 'Context: ' . print_r($context, 1));
-  watchdog('netbanx', 'CIDs: ' . print_r($cids, 1));
-
   foreach ($cids as $cid) {
     // Fetch the receipt (assume latest for a given contact ID)
     $params = array(
@@ -162,7 +159,6 @@ function netbanx_civicrm_tokenValues(&$values, $cids, $job = null, $tokens = arr
     }
 
     $tx = $dao->trxn_id;
-    watchdog('netbanx', 'TX found for ' . $contact_id . ' = ' . $tx);
 
     // $tx = db_query("select invoice_id from {civicrm_contribution} where contact_id = :id order by receive_date desc limit 1", array(':id' => $cid))->fetchField();
     $receipt = db_query("select receipt from {civicrmdesjardins_receipt} where trx_id = :tx", array(':tx' => $tx))->fetchField();
